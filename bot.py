@@ -21,12 +21,26 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 update_id = None
 
+TRANSLATE_ATTEMPTS = 5
 CYRILLIC_SYMBOLS = "йцукенгшщзхъёэждлорпавыфячсмитьбю"
 WORDS_TO_GENERATE_RANGE = range(5, 15)
 WORDS_FROM_MESSAGE_RANGE = range(1, 5)
 GENERATED_WORD_LENGTH_RANGE = range(4, 8)
 
 GENERATED_TEXT_LENGTH = max(GENERATED_WORD_LENGTH_RANGE) * max(WORDS_TO_GENERATE_RANGE)
+
+def longest_substring_finder(string1, string2):
+    answer = ""
+    len1, len2 = len(string1), len(string2)
+    for i in range(len1):
+        match = ""
+        for j in range(len2):
+            if (i + j < len1 and string1[i + j] == string2[j]):
+                match += string2[j]
+            else:
+                if (len(match) > len(answer)): answer = match
+                match = ""
+    return answer
 
 def main():
     """Run the bot."""
@@ -65,12 +79,28 @@ def generate_words(k_range=WORDS_TO_GENERATE_RANGE, length_range=GENERATED_WORD_
 
     return words
 
-
 def choose_words(msg, words_range=WORDS_FROM_MESSAGE_RANGE):
     words = re.compile('\w+').findall(msg)
     k = min(random.choice(WORDS_FROM_MESSAGE_RANGE), len(words))
     words = sorted(words, key=lambda x: len(x), reverse=True)
     return words[:k]
+
+def generate_answer(msg):
+    for _ in range(TRANSLATE_ATTEMPTS):
+        chozen_words = choose_words(msg)
+        generated_words = generate_words()
+        all_words = chozen_words + generated_words
+        random.shuffle(all_words)
+        final_text = " ".join(all_words)
+        print("  final_text", final_text)
+
+        translated = Translator().translate(text=final_text, dest='ru', src='lb').text
+        print("  translated", translated)
+
+        mutual = longest_substring_finder(final_text, translated)
+        if len(mutual) < 10:
+            return translated
+    return "Истину знает только Бог."
 
 def echo(bot):
     """Echo the message the user sent."""
@@ -87,24 +117,8 @@ def echo(bot):
                 update.message.reply_text("Задай вопрос. Познай ответ.")
                 return
 
-            chozen_words = choose_words(msg)
-            # print("  chozen_words", chozen_words)
-
-            generated_words = generate_words()
-            # print("  generated_words", generated_words)
-
-            all_words = chozen_words + generated_words
-            # print("  all_words", all_words)
-
-            random.shuffle(all_words)
-
-            final_text = " ".join(all_words)
-            print("  final_text", final_text)
-
-            translated = Translator().translate(text=final_text, dest='ru', src='lb').text
-            print("  translated", translated)
-
-            update.message.reply_text(translated)
+            answer = generate_answer(msg)
+            update.message.reply_text(answer)
 
 
 if __name__ == '__main__':
