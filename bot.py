@@ -23,9 +23,9 @@ update_id = None
 
 TRANSLATE_ATTEMPTS = 5
 CYRILLIC_SYMBOLS = "йцукенгшщзхъёэждлорпавыфячсмитьбю"
-WORDS_TO_GENERATE_RANGE = range(5, 15)
+WORDS_TO_GENERATE_RANGE = range(5, 12)
 WORDS_FROM_MESSAGE_RANGE = range(1, 5)
-GENERATED_WORD_LENGTH_RANGE = range(4, 8)
+GENERATED_WORD_LENGTH_RANGE = range(3, 6)
 
 GENERATED_TEXT_LENGTH = max(GENERATED_WORD_LENGTH_RANGE) * max(WORDS_TO_GENERATE_RANGE)
 
@@ -118,7 +118,8 @@ def echo(bot):
                 return
 
             answer = generate_answer(msg)
-            update.message.reply_text(answer)
+            translated = answer # Translator().translate(text=answer, dest='ru', src='en').text
+            update.message.reply_text(translated)
 
 
 if __name__ == '__main__':
