@@ -24,10 +24,8 @@ update_id = None
 TRANSLATE_ATTEMPTS = 5
 CYRILLIC_SYMBOLS = "йцукенгшщзхъёэждлорпавыфячсмитьбю"
 WORDS_TO_GENERATE_RANGE = range(5, 12)
-WORDS_FROM_MESSAGE_RANGE = range(1, 5)
+WORDS_FROM_MESSAGE_RANGE = range(2, 4)
 GENERATED_WORD_LENGTH_RANGE = range(3, 6)
-
-GENERATED_TEXT_LENGTH = max(GENERATED_WORD_LENGTH_RANGE) * max(WORDS_TO_GENERATE_RANGE)
 
 def longest_substring_finder(string1, string2):
     answer = ""
@@ -64,50 +62,72 @@ def main():
             # The user has removed or blocked the bot.
             update_id += 1
 
-def generate_text(length=GENERATED_TEXT_LENGTH):
+def generate_text(length):
     return ''.join(random.choices(CYRILLIC_SYMBOLS, k=length))
 
-def generate_words(k_range=WORDS_TO_GENERATE_RANGE, length_range=GENERATED_WORD_LENGTH_RANGE):
-    words = []
-    k = random.choice(k_range)
-    random_text = generate_text()
-    for _ in range(k):
-        w_length = random.choice(length_range)
-        w = random_text[:w_length]
-        random_text = random_text[w_length:]
-        words.append(w) 
+def generate_random_word(length_range=GENERATED_WORD_LENGTH_RANGE):
+    return generate_text(random.choice(GENERATED_WORD_LENGTH_RANGE))
 
-    return words
+def generate_words(k=WORDS_TO_GENERATE_RANGE):
+    return [generate_random_word() for _ in WORDS_TO_GENERATE_RANGE]
 
 def choose_words(msg, words_range=WORDS_FROM_MESSAGE_RANGE):
-    words = re.compile('\w+').findall(msg)
-    return words
-    # k = min(random.choice(WORDS_FROM_MESSAGE_RANGE), len(words))
-    # words = sorted(words, key=lambda x: len(x), reverse=True)
-    # return words[:k]
+    words = re.compile(r'\w+').findall(msg)
+    k = min(random.choice(WORDS_FROM_MESSAGE_RANGE), len(words))
+    words = sorted(words, key=lambda x: len(x), reverse=True)
+    return words[:k]
 
+def translate_to_english(msg):
+    try:
+        return Translator().translate(text=msg, dest='en').text
+    except Exception as e:
+        print(e)
+        return None
+
+def translate(msg, dest='ru', src='lb'):
+    try:
+        return Translator().translate(text=msg, dest=dest, src=src).text
+    except Exception as e:
+        print(e) 
+        return None
+
+def is_translation_valid(original, translated):
+    if translated.lower()[0] not in CYRILLIC_SYMBOLS:
+        return False 
+
+    mutual = longest_substring_finder(original, translated)
+    if len(mutual) > 10:
+        print("  mutual:", mutual)
+        return False
+
+    return True
+    
 def generate_answer(msg):
+    english = translate_to_english(msg)
+    if english is None:
+        return "Истину знает только Бог."
+
+    print("  english:", english)
     try:
         for _ in range(TRANSLATE_ATTEMPTS):
-            chozen_words = choose_words(msg)
+            chozen_words = choose_words(english)
             generated_words = generate_words()
             all_words = chozen_words + generated_words
             random.shuffle(all_words)
             final_text = " ".join(all_words)
             print("  final_text:", final_text)
-
-            translated = Translator().translate(text=final_text, dest='ru', src='lb').text
+            translated = translate(final_text)
             print("  translated:", translated)
 
-            if translated.lower()[0] not in CYRILLIC_SYMBOLS:
-                continue 
-
-            mutual = longest_substring_finder(final_text, translated)
-            if len(mutual) < 10:
+            if is_translation_valid(final_text, translated):
                 return translated
+            
     except Exception as e:
         print(e)
+        pass
+    
     return "Истину знает только Бог."
+    
 
 def echo(bot):
     """Echo the message the user sent."""
