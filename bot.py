@@ -81,9 +81,10 @@ def generate_words(k_range=WORDS_TO_GENERATE_RANGE, length_range=GENERATED_WORD_
 
 def choose_words(msg, words_range=WORDS_FROM_MESSAGE_RANGE):
     words = re.compile('\w+').findall(msg)
-    k = min(random.choice(WORDS_FROM_MESSAGE_RANGE), len(words))
-    words = sorted(words, key=lambda x: len(x), reverse=True)
-    return words[:k]
+    return words
+    # k = min(random.choice(WORDS_FROM_MESSAGE_RANGE), len(words))
+    # words = sorted(words, key=lambda x: len(x), reverse=True)
+    # return words[:k]
 
 def generate_answer(msg):
     try:
@@ -93,10 +94,10 @@ def generate_answer(msg):
             all_words = chozen_words + generated_words
             random.shuffle(all_words)
             final_text = " ".join(all_words)
-            print("  final_text", final_text)
+            print("  final_text:", final_text)
 
             translated = Translator().translate(text=final_text, dest='ru', src='lb').text
-            print("  translated", translated)
+            print("  translated:", translated)
 
             if translated.lower()[0] not in CYRILLIC_SYMBOLS:
                 continue 
