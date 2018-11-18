@@ -117,7 +117,9 @@ def echo(bot):
 
         if update.message and update.message.text:  # your bot can receive updates without messages
             msg = update.message.text
-            print("\nmsg", msg)
+            username = update.message["chat"]["username"]
+            name = "%s %s" % (update.message["chat"]["first_name"], update.message["chat"]["last_name"])
+            print("\n@%s: %s" % (username if username else name, msg))
 
             if msg == '/start':
                 update.message.reply_text("Задай вопрос. Познай ответ.")
