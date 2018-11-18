@@ -97,6 +97,9 @@ def generate_answer(msg):
         translated = Translator().translate(text=final_text, dest='ru', src='lb').text
         print("  translated", translated)
 
+        if translated.lower()[0] not in CYRILLIC_SYMBOLS:
+            continue 
+
         mutual = longest_substring_finder(final_text, translated)
         if len(mutual) < 10:
             return translated
