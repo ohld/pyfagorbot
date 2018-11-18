@@ -86,23 +86,26 @@ def choose_words(msg, words_range=WORDS_FROM_MESSAGE_RANGE):
     return words[:k]
 
 def generate_answer(msg):
-    for _ in range(TRANSLATE_ATTEMPTS):
-        chozen_words = choose_words(msg)
-        generated_words = generate_words()
-        all_words = chozen_words + generated_words
-        random.shuffle(all_words)
-        final_text = " ".join(all_words)
-        print("  final_text", final_text)
+    try:
+        for _ in range(TRANSLATE_ATTEMPTS):
+            chozen_words = choose_words(msg)
+            generated_words = generate_words()
+            all_words = chozen_words + generated_words
+            random.shuffle(all_words)
+            final_text = " ".join(all_words)
+            print("  final_text", final_text)
 
-        translated = Translator().translate(text=final_text, dest='ru', src='lb').text
-        print("  translated", translated)
+            translated = Translator().translate(text=final_text, dest='ru', src='lb').text
+            print("  translated", translated)
 
-        if translated.lower()[0] not in CYRILLIC_SYMBOLS:
-            continue 
+            if translated.lower()[0] not in CYRILLIC_SYMBOLS:
+                continue 
 
-        mutual = longest_substring_finder(final_text, translated)
-        if len(mutual) < 10:
-            return translated
+            mutual = longest_substring_finder(final_text, translated)
+            if len(mutual) < 10:
+                return translated
+    except Exception as e:
+        print(e)
     return "Истину знает только Бог."
 
 def echo(bot):
